@@ -16,8 +16,8 @@ const registerUser = asyncHandler(async (req, res) => {
     //return res
 
     const { fullName, email, username, password } = req.body
-    console.log("email", email);
 
+    // console.log("Body", req.body);
 
     //validation - not empty
     //First Method
@@ -45,7 +45,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
     //check if user already exists in database: username, email
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
 
@@ -55,7 +55,16 @@ const registerUser = asyncHandler(async (req, res) => {
 
     //check for images, check for avatar
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage)
+        && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+
+
+    // console.log("Files", req.files);
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required!!")
@@ -65,6 +74,8 @@ const registerUser = asyncHandler(async (req, res) => {
     const avatar = await uploadFileOnCloudinay(avatarLocalPath)
     const coverImage = await uploadFileOnCloudinay(coverImageLocalPath)
 
+
+
     if (!avatar) {
         throw new ApiError(400, "Avatar file is required!!")
     }
@@ -72,6 +83,7 @@ const registerUser = asyncHandler(async (req, res) => {
     //create user object - create entry in db
     const user = await User.create({
         fullName,
+        username,
         avatar: avatar.url,
         //Validate coverImage
         coverImage: coverImage?.url || "",
@@ -84,12 +96,14 @@ const registerUser = asyncHandler(async (req, res) => {
         "-password -refreshToker"
     )
 
+    // console.log("User", createdUser);
+
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user")
     }
 
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered!!")
+        new ApiResponse(200, createdUser, "User registered!! ")
     )
 
 })

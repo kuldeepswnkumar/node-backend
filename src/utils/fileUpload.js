@@ -18,7 +18,9 @@ const uploadFileOnCloudinay = async (localFilepath) => {
             resource_type: "auto"
         })
         //File has been uploaded
-        console.log("Your File is uploaded!!", response.url);
+        // console.log("Your File is uploaded!!", response.url);
+        //after getting file autometically removing
+        fs.unlinkSync(localFilepath)
         return response;
     } catch (error) {
         fs.unlinkSync(localFilepath)
